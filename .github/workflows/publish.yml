@@ -17,7 +17,7 @@ on:
       ref:
         description: 'Git ref (tag or commit SHA) to build'
         required: true
-        type: string 
+        type: string
         default: 'main'
       push:
         description: 'Push the image to container registry'
@@ -34,7 +34,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ toLower(github.repository) }}
 
 permissions:
   contents: read
