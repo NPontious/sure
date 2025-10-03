@@ -34,9 +34,11 @@ class SimplefinItem::Importer
 
     def determine_sync_start_date
       # For the first sync, get all available data by using a very wide date range
-      # SimpleFin requires a start_date parameter - without it, only returns recent transactions
+      # For the first sync, get all available data by using a very wide date range
+      # When start_date is not provided, SimpleFin may only return recent transactions
       unless simplefin_item.last_synced_at
-        return nil  # Don't send start_date for the first sync
+        # Return a very old start date to fetch all transactions on first sync
+        return Time.at(0)
       end
 
       # For subsequent syncs, fetch from last sync date with a buffer
