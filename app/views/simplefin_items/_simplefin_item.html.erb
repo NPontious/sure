@@ -40,11 +40,6 @@
               <%= icon "alert-triangle", size: "sm", color: "warning" %>
               <%= tag.span "Requires Update" %>
             </div>
-          <% elsif simplefin_item.sync_error.present? %>
-            <div class="text-secondary flex items-center gap-1">
-              <%= icon "alert-circle", size: "sm", color: "destructive" %>
-              <%= tag.span "Error", class: "text-destructive" %>
-            </div>
           <% else %>
             <p class="text-secondary">
               <%= simplefin_item.last_synced_at ? "Last synced #{time_ago_in_words(simplefin_item.last_synced_at)} ago" : "Never synced" %>
@@ -94,8 +89,13 @@
           </div>
         <% elsif simplefin_item.accounts.empty? %>
           <div class="p-4 flex flex-col gap-3 items-center justify-center">
-            <p class="text-primary font-medium text-sm">No accounts found</p>
-            <p class="text-secondary text-sm">This connection doesn't have any synchronized accounts yet.</p>
+            <% if simplefin_item.sync_error.present? %>
+              <p class="text-primary font-medium text-sm">Sync Error</p>
+              <p class="text-destructive text-sm whitespace-pre-wrap"><%= simplefin_item.sync_error %></p>
+            <% else %>
+              <p class="text-primary font-medium text-sm">No accounts found</p>
+              <p class="text-secondary text-sm">This connection doesn't have any synchronized accounts yet.</p>
+            <% end %>
           </div>
         <% end %>
       </div>
