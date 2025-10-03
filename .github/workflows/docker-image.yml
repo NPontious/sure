@@ -9,8 +9,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -23,19 +27,21 @@ jobs:
         with:
           string: ${{ github.repository }}
 
-      - name: Log in to Docker Hub
+      # Log in to the GitHub Container Registry
+      - name: Log in to ghcr.io
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # This step uses the lowercased repository name for tags and cache
+      # This step now uses the lowercased repository name for all references
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.repo.outputs.lowercase }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ steps.repo.outputs.lowercase }}:buildcache
-          cache-to: type=registry,ref=${{ steps.repo.outputs.lowercase }}:buildcache,mode=max
+          tags: ghcr.io/${{ steps.repo.outputs.lowercase }}:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ steps.repo.outputs.lowercase }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ steps.repo.outputs.lowercase }}:buildcache,mode=max
