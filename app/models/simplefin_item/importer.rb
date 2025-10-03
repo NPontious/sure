@@ -12,7 +12,8 @@ class SimplefinItem::Importer
 
     accounts_data = simplefin_provider.get_accounts(
       simplefin_item.access_url,
-      start_date: start_date
+      start_date: start_date,
+      end_date: Time.current
     )
 
     # Handle errors if present
