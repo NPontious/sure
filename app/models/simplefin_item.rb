@@ -39,6 +39,18 @@ class SimplefinItem < ApplicationRecord
     end
   end
 
+  class ProcessAccountsJob < ApplicationJob
+    queue_as :default
+
+    def perform(simplefin_item)
+      simplefin_item.process_accounts
+    end
+  end
+
+  def process_accounts_later
+    ProcessAccountsJob.perform_later(self)
+  end
+
   def schedule_account_syncs(parent_sync: nil, window_start_date: nil, window_end_date: nil)
     accounts.each do |account|
       account.sync_later(

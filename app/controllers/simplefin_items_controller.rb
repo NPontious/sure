@@ -115,8 +115,8 @@ class SimplefinItemsController < ApplicationController
     # Clear pending status and mark as complete
     @simplefin_item.update!(pending_account_setup: false)
 
-    # Process transactions for the newly created accounts
-    @simplefin_item.process_accounts
+    # Process transactions for the newly created accounts in the background
+    @simplefin_item.process_accounts_later
 
     # Schedule account syncs for the newly created accounts
     @simplefin_item.schedule_account_syncs
