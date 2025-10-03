@@ -10,10 +10,6 @@ class SimplefinItem::Importer
     # Determine start date based on sync history
     start_date = determine_sync_start_date
 
-    if start_date
-    else
-    end
-
     accounts_data = simplefin_provider.get_accounts(
       simplefin_item.access_url,
       start_date: start_date
@@ -40,7 +36,7 @@ class SimplefinItem::Importer
       # For the first sync, get all available data by using a very wide date range
       # SimpleFin requires a start_date parameter - without it, only returns recent transactions
       unless simplefin_item.last_synced_at
-        return 100.years.ago  # Set to 100 years for first sync to get everything just to be sure
+        return nil  # Don't send start_date for the first sync
       end
 
       # For subsequent syncs, fetch from last sync date with a buffer
@@ -49,6 +45,7 @@ class SimplefinItem::Importer
     end
 
     def import_account(account_data)
+      Rails.logger.info "SimpleFin account_data: #{account_data.inspect}"
       # Import organization data from the account if present and not already imported
       if account_data[:org] && simplefin_item.institution_id.blank?
         import_organization(account_data[:org])
@@ -67,7 +64,6 @@ class SimplefinItem::Importer
       # Then save transactions separately (so they don't get overwritten)
       if transactions && transactions.any?
         simplefin_account.update!(raw_transactions_payload: transactions)
-      else
       end
     end
 
@@ -92,11 +88,11 @@ class SimplefinItem::Importer
     end
 
     def handle_errors(errors)
-      error_messages = errors.map { |error| error[:description] || error[:message] }.join(", ")
+      error_messages = errors.join(", ")
 
-      # Mark item as requiring update for certain error types
-      if errors.any? { |error| error[:code] == "auth_failure" || error[:code] == "token_expired" }
+      if error_messages.include?("reauthenticate")
         simplefin_item.update!(status: :requires_update)
+        return
       end
 
       raise Provider::Simplefin::SimplefinError.new(
