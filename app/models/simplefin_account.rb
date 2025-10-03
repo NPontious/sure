@@ -11,7 +11,7 @@ class SimplefinAccount < ApplicationRecord
     snapshot = account_snapshot.with_indifferent_access
 
     # Map SimpleFin field names to our field names
-    update!(
+    assign_attributes(
       current_balance: parse_balance(snapshot[:balance]),
       available_balance: parse_balance(snapshot[:"available-balance"]),
       currency: parse_currency(snapshot[:currency]),
@@ -24,6 +24,7 @@ class SimplefinAccount < ApplicationRecord
       org_data: snapshot[:org],
       raw_payload: account_snapshot
     )
+    save!
   end
 
   def upsert_simplefin_transactions_snapshot!(transactions_snapshot)
