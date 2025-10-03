@@ -17,7 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # This action generates lowercase tags and labels automatically
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -34,7 +33,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The build action now uses the lowercase outputs from the "meta" step
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
