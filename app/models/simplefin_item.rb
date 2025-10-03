@@ -34,21 +34,31 @@ class SimplefinItem < ApplicationRecord
   end
 
   def process_accounts
+    all_errors = []
     simplefin_accounts.each do |simplefin_account|
-      SimplefinAccount::Processor.new(simplefin_account).process
+      processor = SimplefinAccount::Processor.new(simplefin_account)
+      processor.process
+      all_errors.concat(processor.errors)
+    end
+
+    if all_errors.any?
+      update(sync_error: all_errors.join("\n"))
+    else
+      update(sync_error: nil)
     end
   end
 
   class ProcessAccountsJob < ApplicationJob
     queue_as :default
 
-    def perform(simplefin_item)
+    def perform(simplefin_item_id)
+      simplefin_item = SimplefinItem.find(simplefin_item_id)
       simplefin_item.process_accounts
     end
   end
 
   def process_accounts_later
-    ProcessAccountsJob.perform_later(self)
+    ProcessAccountsJob.perform_later(id)
   end
 
   def schedule_account_syncs(parent_sync: nil, window_start_date: nil, window_end_date: nil)

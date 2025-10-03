@@ -1,8 +1,9 @@
 class SimplefinAccount::Processor
-  attr_reader :simplefin_account
+  attr_reader :simplefin_account, :errors
 
   def initialize(simplefin_account)
     @simplefin_account = simplefin_account
+    @errors = []
   end
 
   def process
@@ -17,13 +18,17 @@ class SimplefinAccount::Processor
 
       # This should not happen in normal flow since accounts are created manually
       # during setup, but keeping as safety check
-      Rails.logger.error("SimpleFin account #{simplefin_account.id} has no associated Account - this should not happen after manual setup")
+      error_message = "SimpleFin account #{simplefin_account.id} has no associated Account - this should not happen after manual setup"
+      Rails.logger.error(error_message)
+      @errors << error_message
     end
 
     def process_transactions
       return unless simplefin_account.raw_transactions_payload.present?
 
       account = simplefin_account.account
+      return if account.nil? # Cannot process transactions without an account
+
       transactions_data = simplefin_account.raw_transactions_payload
 
       transactions_data.each do |transaction_data|
@@ -64,8 +69,10 @@ class SimplefinAccount::Processor
         )
       end
     rescue => e
-      Rails.logger.error("Failed to process SimpleFin transaction #{data[:id]}: #{e.message}")
-      # Don't fail the entire sync for one bad transaction
+      error_message = "Failed to process SimpleFin transaction #{data[:id]}: #{e.message}. Data: #{data.inspect}"
+      Rails.logger.error(error_message)
+      Rails.logger.error(e.backtrace.join("\n"))
+      @errors << error_message
     end
 
     def parse_amount(amount_value, currency)
