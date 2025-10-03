@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Grant permissions for the workflow to write to ghcr.io
     permissions:
       contents: read
       packages: write
@@ -35,7 +36,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # This step now uses the lowercased repository name for all references
+      # This step uses the lowercased repository name for all references
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
